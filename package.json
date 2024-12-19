@@ -1,0 +1,25 @@
+{
+  "name": "mahfuz-js-frontend",
+  "version": "1.0.0",
+  "description": "Frontend Library For Mahfuz-js",
+  "main": "./dist/mahfuz-js-frontend.js",
+  "type": "module",
+  "files": [
+    "dist/mahfuz-js-frontend.js",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "npx javascript-obfuscator src/index.js --output dist/mahfuz-js-frontend.js",
+    "update": "node update.js",
+    "test": "nodemon ./src/test.js"
+  },
+  "author": "Mohammad Mahfuz Rahman",
+  "license": "MIT",
+  "devDependencies": {
+    "javascript-obfuscator": "^4.1.1",
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "axios": "^1.7.9"
+  }
+}
