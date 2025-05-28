@@ -4,3 +4,5 @@ dist/
 .env
 .npmignore
 update.js
+package-lock.json
+package.json
