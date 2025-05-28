@@ -1,132 +1,171 @@
-# Mahfuz JS MERN Stack Library
+# Mahfuz-JS Frontend Library Documentation
 
-## Overview
-Mahfuz JS is a Node.js MERN Stack library that provides various utilities including server setup, database connection, encryption, email sending, and GitHub release checking.
+Mahfuz-JS is a lightweight and extensible frontend library designed to simplify API interactions and version management in modern JavaScript applications. This library provides a structured interface to interact with REST APIs and manage application update logic using GitHub releases.
+
+---
+
+## Table of Contents
+
+1. [Installation](#installation)
+2. [Frontend Class](#frontend-class)
+
+   * [ConnectToBackend](#connecttobackend)
+   * [AddInterceptors](#addinterceptors)
+   * [HTTP Methods (GET, POST, PUT, PATCH, DELETE)](#http-methods)
+   * [Concurrent Requests](#concurrent-requests)
+   * [Cancelable Requests](#cancelable-requests)
+   * [File Upload](#file-upload)
+3. [UpdateChecker Class](#updatechecker-class)
+
+   * [CheckLatestVersion](#checklatestversion)
+4. [Error Handling](#error-handling)
+
+---
 
 ## Installation
-To install the module, use npm:
-```sh
-npm install mahfuz-js
+
+Install via npm:
+
+```bash
+npm install mahfuz-js-frontend
 ```
-## Usage
-### Importing the Module
-First, import the required classes from the module:
+
+Import into your project:
+
 ```javascript
-import { Backend, DatabaseConnector, Utils, ApiResponse, ApiError, MahfuzMailer, UpdateChecker } from 'mahfuz-js';
+import { Frontend, UpdateChecker } from "mahfuz-js";
 ```
 
-## Backend Class
-### The Backend class sets up an Express server with necessary middleware.
+---
+
+## Frontend Class
+
+### Initialization
+
 ```javascript
-const backend = new Backend();
-backend.startServer();
+const frontend = new Frontend();
 ```
-## DatabaseConnector Class
-### The DatabaseConnector class provides methods to connect to MongoDB and MongoDB Atlas.
 
-### Example Usage:
-#### MongoDB
+### ConnectToBackend
+
+Establish a connection to your backend API.
+
 ```javascript
-const dbConfig = {
-  Host: 'localhost',
-  Port: 27017,
-  Username: 'your-username',
-  Password: 'your-password',
-  DbName: 'your-db-name'
-};
-
-const dbConnector = new DatabaseConnector(dbConfig);
-dbConnector.ConnectToMongoDB();
+frontend.ConnectToBackend(import.meta.env.VITE_BACKEND_URL);
 ```
-#### MongoDB Atlas
+
+If no backend URL is provided, a SweetAlert modal will prompt the user with setup instructions.
+
+### AddInterceptors
+
+Log all requests and responses for easier debugging.
+
 ```javascript
-const dbConfig = {
-    SubDomain: 'your-subdomain',
-    Username: 'your-username',
-    Password: 'your-password',
-    Cluster: 'your-cluster-name'
-};
-const dbConnector = new DatabaseConnector(dbConfig);
-dbConnector.ConnectToMongoDBAtlas();
-
-
+frontend.AddInterceptors();
 ```
 
+### HTTP Methods
 
-### Utils Class
-The `Utils` class provides utility functions for generating random numbers, handling async requests, and encrypting data.
+All HTTP methods return the full response object or the error.
+
 ```javascript
-const utils = new Utils();
-const randomNumber = utils.GenerateRandomNumber(10);
-const encryptedString = utils.Encrypt('your-string');
-const isMatch = utils.Compare('your-string', encryptedString);
+await frontend.get("/api/users");
+await frontend.post("/api/create", { name: "John" });
+await frontend.put("/api/user/1", { name: "Updated" });
+await frontend.patch("/api/user/1", { age: 30 });
+await frontend.delete("/api/user/1");
 ```
 
-### ApiResponse Class
-The `ApiResponse` class is used to standardize API responses.
+### Concurrent Requests
+
+Execute multiple requests simultaneously.
+
 ```javascript
-const response = new ApiResponse(200, { key: 'value' }, 'Success message');
+const responses = await frontend.ConcurrentRequests([
+  frontend.get("/api/a"),
+  frontend.get("/api/b")
+]);
 ```
 
-### ApiError Class
-The `ApiError` class is used to standardize API error responses.
+### Cancelable Requests
+
+Create and cancel long-running requests.
+
 ```javascript
-const error = new ApiError(400, 'Error message', ['error1', 'error2']);
+const source = frontend.CancelRequest();
+frontend.Server.post("/api/data", {}, { cancelToken: source.token });
+source.cancel("Operation canceled by user.");
 ```
 
-### MahfuzMailer Class
-The `MahfuzMailer` class is used to send emails using nodemailer.
+Alternative using helper:
+
 ```javascript
-const mailConfig = {
-  Name: 'Your Name', \\ Your name or company name
-  From: 'your-email@example.com', \\ Your email address that you used to register for the SMTP server
-  Host: 'smtp.example.com', \\ Your SMTP server host address 
-  Port: 465, \\ Your SMTP server port
-  Username: 'your-username', \\ Your SMTP server username that SMTP server provided
-  Password: 'your-password' \\ Your SMTP server password that SMTP server provided
-};
-
-const mailer = new MahfuzMailer(mailConfig);
-mailer.SendMail('recipient@example.com', 'Subject', '<h1>Email Body</h1>');
+await frontend.SendWithCancel("/api/data", { id: 123 });
 ```
 
-### UpdateChecker Class
-The `UpdateChecker` class is used to check for the latest release of a GitHub repository and retrieve the download URL for a specific operating system.
+### File Upload
+
+Upload files with progress tracking.
+
 ```javascript
-const updateConfig = {
-  GithubUsername: 'your-github-username',
-  RepoName: 'your-repo-name',
-  RepoToken: 'your-github-token' \\ Your GitHub personal access token note: please store your tokens securely inside the dot env file
-};
-
-const checker = new UpdateChecker(updateConfig);
-checker.CheckLatestVersion('windows')
-  .then(result => {
-    if (result.success) {
-      console.log('Download URL:', result.downloadUrl);
-    } else {
-      console.log('Error:', result.message);
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-  });
+const response = await frontend.UploadFileToBackend("/api/upload", file);
 ```
 
-## Supported Operating Systems
-The `CheckLatestVersion` method supports the following operating systems:
-- `windows` (returns `.exe` files)
-- `mac` (returns `.dmg` files)
-- `linux` (returns `.deb` files)
+---
+
+## UpdateChecker Class
+
+### Initialization
+
+```javascript
+const checker = new UpdateChecker({
+  GithubUsername: "your-username",
+  RepoName: "your-repo",
+  RepoToken: "your-github-token"
+});
+```
+
+### CheckLatestVersion
+
+Fetch the latest release based on OS.
+
+```javascript
+const result = await checker.CheckLatestVersion("windows");
+if (result.success) {
+  window.open(result.downloadUrl);
+}
+```
+
+Supported OS values:
+
+* `windows`
+* `mac`
+* `linux`
+
+---
 
 ## Error Handling
-The `CheckLatestVersion` method returns an object with a `success` property indicating whether the operation was successful. If `success` is `false`, the `message` property contains an error message.
 
-## License
-This project is licensed under the MIT License.
+All methods return either a response object or an error. Use `try-catch` or conditional checks to handle them properly.
 
-## Author
-Mahfuz JS is developed by [Mohammad Mahfuz Rahman](https://github.com/mahfuz0712).
-
-Happy Coding!
+```javascript
+try {
+  const response = await frontend.get("/api/data");
+  if (response.status === 200) {
+    // handle success
+  }
+} catch (error) {
+  console.error("API Error:", error);
+}
 ```
+
+---
+
+## Notes
+
+* Always ensure your environment variable `VITE_BACKEND_URL` is set.
+* Protect your GitHub token. Avoid exposing it in the frontend in production.
+
+---
+
+Mahfuz-JS: Built for simplicity, designed for power.
